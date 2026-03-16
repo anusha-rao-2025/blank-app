@@ -34,7 +34,7 @@ def get_ai_insights(df, persona, location):
     total_spent = expenses['amount'].abs().sum()
     
     # Get top 5 merchants with their actual spend amounts for better context
-    top_merchants = expenses.groupby('description')['amount'].abs().sum().nlargest(5)
+    top_merchants = expenses.groupby('description')['amount'].sum().abs().nlargest(5)
     merchant_string = ", ".join([f"{name} (€{amt:.2f})" for name, amt in top_merchants.items()])
     
     prompt = f"""
