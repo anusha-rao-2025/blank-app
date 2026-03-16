@@ -135,23 +135,27 @@ if uploaded_file:
         # TAB 2: AI & FORECASTING 
         # ==========================================
         with tab_ai:
-            st.subheader("End of Month Projections")
-            
-            # Forecast Math (Run-Rate)
+            # --- Robust Forecast Math (Using Median) ---
             if not expenses_df.empty:
-                total_spent = expenses_df['amount_abs'].sum()
+                # 1. Group by date to find the total spent on each active day
+                daily_totals = expenses_df.groupby('date')['amount_abs'].sum()
+                
+                # 2. Find the median daily spend (bypasses massive outliers like rent)
+                median_daily_spend = daily_totals.median()
+                
                 last_transaction_date = df['date'].max()
                 days_passed = last_transaction_date.day
                 
                 if days_passed > 0:
                     total_days_in_month = calendar.monthrange(last_transaction_date.year, last_transaction_date.month)[1]
-                    average_daily_spend = total_spent / days_passed
-                    forecasted_total = average_daily_spend * total_days_in_month
+                    
+                    # 3. Project the total using the median
+                    forecasted_total = median_daily_spend * total_days_in_month
                     
                     st.metric(
                         label="Projected End-of-Month Spend", 
                         value=f"€{forecasted_total:,.2f}", 
-                        delta=f"Based on a run-rate of €{average_daily_spend:,.2f} per day", 
+                        delta=f"Based on a typical median spend of €{median_daily_spend:,.2f} per day", 
                         delta_color="off"
                     )
                 
