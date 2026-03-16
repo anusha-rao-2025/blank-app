@@ -1,3 +1,4 @@
+# Let's bring in the tools we need to build this dashboard
 import streamlit as st
 import pandas as pd
 import altair as alt
@@ -5,16 +6,17 @@ import google.generativeai as genai
 import calendar
 from datetime import datetime
 
-# --- PAGE CONFIGURATION & MEMORY SETUP ---
+# --- 1. SETTING THE STAGE ---
+# Let's give the browser tab a nice title and make it wide so our charts have room to breathe
 st.set_page_config(page_title="MoneyTrace AI", page_icon="💰", layout="wide")
 
-# Initialize memory for the Reminders Tab
+# Streamlit forgets things every time a button is clicked, so we need to give it a "memory"
+# Here we are creating an empty list to store the user's manual payment reminders
 if 'reminders' not in st.session_state:
     st.session_state['reminders'] = pd.DataFrame(columns=['Name', 'Amount (€)', 'Category', 'Next Date', 'Frequency'])
 
 # --- SETUP GEMINI API ---
-# IMPORTANT: Put your actual key here before running
-GEMINI_API_KEY = "AIzaSyDppeQkQpXgxEocqyp5rLfyob8g2I7TEoc" 
+GEMINI_API_KEY = "...." 
 genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel('gemini-2.5-flash')
 
@@ -27,6 +29,8 @@ def categorize(desc):
     if any(x in desc for x in ['enel', 'rent', 'bill', 'vodafone']): return 'Bills'
     if any(x in desc for x in ['atm', 'uber', 'train', 'trenitalia', 'metro']): return 'Transport'
     if any(x in desc for x in ['salary', 'deposit', 'transfer']): return 'Income'
+
+    #if it doesn'y match anything above, put it in 'Other' category
     return 'Other'
 
 def get_ai_insights(df, persona, location):
@@ -153,22 +157,22 @@ if uploaded_file:
                 
             st.divider()
             
-            # --- NEW: Dynamic User Profile & Gemini Insights ---
-        st.subheader("🤖 Financial Health Check & Roast")
-        
-        # 1. Let the user define themselves
-        p_col1, p_col2 = st.columns(2)
-        with p_col1:
-            user_persona = st.selectbox("Who are you?", ["Student", "Young Professional", "Freelancer", "Parent"])
-        with p_col2:
-            user_location = st.text_input("City/Location", value="Milan")
+                # --- NEW: Dynamic User Profile & Gemini Insights ---
+            st.subheader("🤖 Financial Health Check & Roast")
             
-        # 2. Add a button to trigger the AI
-        if st.button("Generate Financial Roast"):
-            with st.spinner("Analyzing your terrible spending habits..."):
-                # Pass all THREE variables to the function now
-                ai_advice = get_ai_insights(df, user_persona, user_location)
-            st.info(ai_advice)
+            # 1. Let the user define themselves
+            p_col1, p_col2 = st.columns(2)
+            with p_col1:
+                user_persona = st.selectbox("Who are you?", ["Student", "Young Professional", "Freelancer", "Parent"])
+            with p_col2:
+                user_location = st.text_input("City/Location", value="Milan")
+                
+            # 2. Add a button to trigger the AI
+            if st.button("Generate Financial Roast"):
+                with st.spinner("Analyzing your terrible spending habits..."):
+                    # Pass all THREE variables to the function now
+                    ai_advice = get_ai_insights(df, user_persona, user_location)
+                st.info(ai_advice)
 
         # ==========================================
         # TAB 3: REMINDERS (Interactive Form)
